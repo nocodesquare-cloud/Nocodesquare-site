@@ -1,0 +1,10 @@
+// Cloudflare Workers settings: serve the built site/ folder as static files.
+// Build with `python build_site.py`, then deploy with `npx wrangler deploy`.
+{
+  "name": "nocodesquare",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./site",
+    "html_handling": "auto-trailing-slash"
+  }
+}
