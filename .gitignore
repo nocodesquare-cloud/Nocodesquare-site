@@ -10,3 +10,5 @@ nocodesquare-v3.html
 build_site_bold_version.py
 # Guides written for the team, kept locally
 guides/
+# Local Cloudflare dev files
+.wrangler/

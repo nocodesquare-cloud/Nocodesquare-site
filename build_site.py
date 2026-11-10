@@ -3,9 +3,43 @@ Styles and script live in assets/; page content lives below.
 Run: python build_site.py
 """
 import json, os, re, shutil
+from datetime import date
+import mdlite
 
 OUT = 'site'
 os.makedirs(OUT, exist_ok=True)
+# Start clean so a page removed in the admin doesn't linger
+for f in os.listdir(OUT):
+    if f.endswith(('.html', '.md')): os.remove(os.path.join(OUT, f))
+if os.path.isdir(f'{OUT}/admin'): shutil.rmtree(f'{OUT}/admin')
+shutil.copytree('admin', f'{OUT}/admin')
+
+# ------------------------------------------------------------------ content edited in /admin
+# Site settings: content/settings.json. Blog posts: content/blog/*.md (JSON front matter, then Markdown).
+SETTINGS = json.load(open('content/settings.json', encoding='utf-8'))
+FEE_NGN = f"₦{int(SETTINGS['fee_ngn']):,}"
+
+def long_date(iso):
+    d = date.fromisoformat(str(iso)[:10])
+    return f'{d:%B} {d.day}, {d.year}'
+
+def load_posts(folder='content/blog'):
+    posts = []
+    for name in os.listdir(folder):
+        if not name.endswith('.md'): continue
+        text = open(os.path.join(folder, name), encoding='utf-8').read().lstrip('\ufeff')
+        meta, end = json.JSONDecoder().raw_decode(text)
+        meta['slug'] = name[:-3]
+        meta['body'] = mdlite.to_html(text[end:])
+        meta['sources'] = [(x.get('title') or x.get('url'), x['url']) for x in meta.get('sources') or [] if x.get('url')]
+        meta['date'] = str(meta.get('date') or '2026-11-05')[:10]
+        meta.setdefault('cat', 'Article'); meta.setdefault('dek', ''); meta.setdefault('cover', '')
+        posts.append(meta)
+    # Newest first; posts published on the same day keep their set order
+    posts.sort(key=lambda x: (-date.fromisoformat(x['date']).toordinal(), x.get('order', 0), x['title']))
+    return posts
+
+POSTS = load_posts()
 if os.path.isdir(f'{OUT}/img'): shutil.rmtree(f'{OUT}/img')
 shutil.copytree('img', f'{OUT}/img')
 
@@ -20,11 +54,11 @@ for icon in ('favicon.svg', 'favicon.ico', 'favicon-light.png', 'favicon-dark.pn
 
 # ------------------------------------------------------------------ shared chrome
 APPLY_LINK = 'apply.html'
-YOUTUBE_URL = 'https://www.youtube.com/@Nocodesquare'   # every YouTube link on the site uses this
-LINKEDIN_URL = 'https://www.linkedin.com/company/nocodesquare'
-INSTAGRAM_URL = 'https://www.instagram.com/nocodesquare/'
+YOUTUBE_URL = SETTINGS['youtube_url'] or '#'   # every YouTube link on the site uses this
+LINKEDIN_URL = SETTINGS['linkedin_url'] or '#'
+INSTAGRAM_URL = SETTINGS['instagram_url'] or '#'
 # Newsletter sign-ups are POSTed here as JSON {email, page, source}. A Make.com, n8n or Zapier webhook works. Empty = the form says sign-ups aren't open yet.
-NEWSLETTER_WEBHOOK = ''
+NEWSLETTER_WEBHOOK = SETTINGS.get('newsletter_webhook') or ''
 YT_ATTRS = '' if YOUTUBE_URL == '#' else ' target="_blank" rel="noopener"'
 NAV = [('index.html', 'Home'), ('community.html', 'Community'), ('cohort.html', 'Academy'), ('events.html', 'Events'), ('about.html', 'About')]
 THEME_BOOT = '<script>try{var t=localStorage.getItem("ncs-theme");if(t)document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>\n'
@@ -90,11 +124,11 @@ FOOTER = '''<footer>
     </form>
   </section>
   <div class="sitemap">
-    <div><b><a href="about.html">About</a></b><a href="blog-what-is-no-code.html">What is no-code?</a><a href="about.html#beliefs">What we believe</a></div>
+    <div><b><a href="about.html">About</a></b>@@FOOT_NOCODE@@<a href="about.html#beliefs">What we believe</a></div>
     <div><b><a href="community.html">Community</a></b><a href="community.html#inside">What happens inside</a><a href="community.html#sessions">Sessions</a><a href="inside-the-build.html">Inside the Build</a><a href="freelance-corner.html">Freelance Corner</a><a href="show-and-tell.html">Show and Tell</a><a href="community.html#start">How to apply</a></div>
     <div><b><a href="cohort.html">Academy</a></b><a href="cohort.html">Cohort</a><a href="cohort-curriculum.html">Curriculum</a><a href="cohort.html#questions">Questions</a><a href="instructors.html">Meet your instructors</a><a href="academy-testimonials.html">Testimonials</a><a href="apply-cohort.html">Apply to the cohort</a></div>
     <div><b><a href="events.html">Events</a></b><a href="events.html">Coming soon</a></div>
-    <div><b><a href="blog.html">Blog</a></b><a href="blog.html">All articles</a><a href="blog-what-is-no-code.html">What is no-code?</a><a href="blog-ai-models-november-2026.html">New AI models</a></div>
+    <div><b><a href="blog.html">Blog</a></b><a href="blog.html">All articles</a>@@FOOT_POSTS@@</div>
     <div><b><a href="merch.html">Merch</a></b><a href="merch.html">Shop</a><a href="cart.html">Your cart</a></div>
     <div><b><a href="@@APPLY@@">Apply</a></b><a href="join.html">Every way in</a><a href="@@YT@@"@@YTA@@>YouTube</a></div>
   </div>
@@ -110,7 +144,11 @@ def social(url, icon, name):
     ext = '' if url == '#' else ' target="_blank" rel="noopener"'
     return f'<a href="{url}"{ext} aria-label="Nocodesquare on {name}" title="{name}"><svg aria-hidden="true"><use href="#{icon}"/></svg></a>'
 SOCIALS = social(LINKEDIN_URL, 'i-linkedin', 'LinkedIn') + social(YOUTUBE_URL, 'i-youtube', 'YouTube') + social(INSTAGRAM_URL, 'i-instagram', 'Instagram')
-FOOTER = FOOTER.replace('@@NL@@', NEWSLETTER_WEBHOOK).replace('@@YT@@', YOUTUBE_URL).replace('@@YTA@@', YT_ATTRS).replace('@@SOCIALS@@', SOCIALS)
+def short_title(t):
+    return re.split(r'(?<=[?]) |:', t)[0]
+FOOT_POSTS = ''.join('<a href="blog-' + x['slug'] + '.html">' + short_title(x['title']) + '</a>' for x in POSTS[:2])
+FOOT_NOCODE = '<a href="blog-what-is-no-code.html">What is no-code?</a>' if any(x['slug'] == 'what-is-no-code' for x in POSTS) else ''
+FOOTER = FOOTER.replace('@@FOOT_POSTS@@', FOOT_POSTS).replace('@@FOOT_NOCODE@@', FOOT_NOCODE).replace('@@NL@@', NEWSLETTER_WEBHOOK).replace('@@YT@@', YOUTUBE_URL).replace('@@YTA@@', YT_ATTRS).replace('@@SOCIALS@@', SOCIALS)
 
 def crumb(*parts):
     out = [f'<a href="{h}">{t}</a>' if h else t for h, t in parts]
@@ -160,7 +198,7 @@ def page(slug, title, current, body):
 </body>
 </html>
 '''
-    open(f'{OUT}/{slug}', 'w', encoding='utf-8').write(html.replace('@@APPLY@@', APPLY_LINK).replace('@@MD@@', slug[:-5] + '.md'))
+    open(f'{OUT}/{slug}', 'w', encoding='utf-8').write(html.replace('@@APPLY@@', APPLY_LINK).replace('@@START@@', START_TEXT).replace('@@FEE@@', FEE_NGN).replace('@@MD@@', slug[:-5] + '.md'))
 
 def rows(items):
     return '<ul class="rows">' + ''.join(f'<li><a class="row" href="{h}"><h3 class="big sm">{t}<small>{d}</small></h3><span>{r} →</span></a></li>' for h, t, d, r in items) + '</ul>'
@@ -172,9 +210,10 @@ COMB = '''<figure class="orb">
         <svg aria-hidden="true"><use href="#cube"/></svg>
         <img src="img/portrait.jpg" alt="Smiling woman in glasses seated in an office" loading="lazy">
       </figure>'''
-COHORT_START = '2027-03-03T00:00:00+01:00'   # next cohort: 3 March 2027, start of day, West Africa Time
+COHORT_START = f"{str(SETTINGS['cohort_start'])[:10]}T00:00:00+01:00"   # start of day, West Africa Time
+START_TEXT = long_date(SETTINGS['cohort_start'])
 COUNTDOWN = f'''<div class="countdown" data-target="{COHORT_START}">
-      <span class="tag">Next cohort starts March 3, 2027</span>
+      <span class="tag">Next cohort starts {START_TEXT}</span>
       <div class="clock" role="timer" aria-label="Time left until the next cohort starts">
         <div><b data-unit="days">--</b><span class="caps">Days</span></div>
         <div><b data-unit="hours">--</b><span class="caps">Hours</span></div>
@@ -531,15 +570,15 @@ def story_card(m):
 
 APPLY_COHORT = '<a class="slab" href="apply-cohort.html">Apply to the cohort</a>'
 # Cohort fee in each currency. Change the amounts here and the switch updates everywhere.
-COHORT_FEE = [('Naira', '₦40,000'), ('Dollars', '$30'), ('Shillings', 'KSh 3,900')]
-FEE_TEXT = '₦40,000, $30 or KSh 3,900'
+COHORT_FEE = [('Naira', f"₦{int(SETTINGS['fee_ngn']):,}"), ('Dollars', f"${int(SETTINGS['fee_usd']):,}"), ('Shillings', f"KSh {int(SETTINGS['fee_kes']):,}")]
+FEE_TEXT = f'{COHORT_FEE[0][1]}, {COHORT_FEE[1][1]} or {COHORT_FEE[2][1]}'
 FEE_TABS = '<div class="cur-tabs" role="group" aria-label="Show the fee in">' + ''.join(
     f'<button type="button" data-cur="{name}" data-fee="{amount}" aria-pressed="{"true" if i == 0 else "false"}">{name}</button>'
     for i, (name, amount) in enumerate(COHORT_FEE)) + '</div>'
 page('cohort.html', 'Cohort', 'cohort.html',
   hero('cohort', 'copper', 'copper', crumb(HOME, (None, 'Cohort')), 'Become skilled in <i>AI automation.</i>', 'The AI Automation Cohort is a guided, live program where you learn by building working automation systems. No coding needed, and no experience with the tools required.', COUNTDOWN + APPLY_COHORT)
   + '''<section class="sheet"><div class="frame"><div class="stats">
-      <div data-fee-switch><b data-fee-amount aria-live="polite">₦40,000</b><span class="caps">Cohort fee</span>''' + FEE_TABS + '''</div>
+      <div data-fee-switch><b data-fee-amount aria-live="polite">@@FEE@@</b><span class="caps">Cohort fee</span>''' + FEE_TABS + '''</div>
       <div class="on"><b>4-6 weeks</b><span class="caps">Guided learning and building</span></div>
       <div><b>Live</b><span class="caps">Sessions and assignments</span></div>
     </div></div></section>'''
@@ -560,7 +599,7 @@ page('cohort.html', 'Cohort', 'cohort.html',
   + sheet('light', '<span class="tag">Questions</span><h2 class="big">Before <i>you apply.</i></h2>', '''<dl class="defs">
         <div><dt>Do I need to know how to code?</dt><dd>No. No coding is needed, and you don't need experience with the tools.</dd></div>
         <div><dt>What do I need?</dt><dd>A PC or laptop is the minimum requirement, and you need to be able to commit the required hours each week.</dd></div>
-        <div><dt>When does it start?</dt><dd>The next cohort starts on March 3, 2027. Slots are limited, and enrollment closes once they fill.</dd></div>
+        <div><dt>When does it start?</dt><dd>The next cohort starts on @@START@@. Slots are limited, and enrollment closes once they fill.</dd></div>
         <div><dt>Is the fee refundable?</dt><dd>No. The cohort fee is non-refundable, so please be sure you can take part fully.</dd></div>
       </dl>''', 'questions')
   + nxt('apply-cohort.html', 'Ready?', 'Apply to the cohort'))
@@ -608,7 +647,7 @@ page('apply-cohort.html', 'Apply to the cohort', 'cohort.html',
   hero('', '', '', crumb(HOME, ('cohort.html', 'Academy'), (None, 'Apply')), 'Apply to <i>the cohort.</i>', 'Fill in the form below. When you finish, you\'ll go to the payment page to secure your place.')
   + """<section class="sheet apply-sheet"><div class="frame">
     <dl class="defs">
-      <div><dt>The fee</dt><dd data-fee-switch><span><b data-fee-amount aria-live="polite">₦40,000</b>, paid after this form. The payment is non-refundable.</span>""" + FEE_TABS + """</dd></div>
+      <div><dt>The fee</dt><dd data-fee-switch><span><b data-fee-amount aria-live="polite">@@FEE@@</b>, paid after this form. The payment is non-refundable.</span>""" + FEE_TABS + """</dd></div>
       <div><dt>What you need</dt><dd>A PC or laptop, and time to commit the required hours each week.</dd></div>
     </dl>
     <div class="form-panel">""" + tally_embed('pb0WzZ', 'Nocodesquare Paid Cohort', '&formEventsForwarding=1') + """</div>
@@ -618,7 +657,7 @@ page('apply-cohort.html', 'Apply to the cohort', 'cohort.html',
 page('join.html', 'Apply', 'join.html',
   hero('africa', 'teal', 'teal', crumb(HOME, (None, 'Apply')), 'Pick your <i>way in.</i>', 'Already building? Apply to the community. Just starting? The cohort is the place to begin.')
   + '<section class="sheet light"><div class="frame">'
-  + rows([('@@APPLY@@', 'Apply to the community', 'For people already building. You\'ll share your goal, your tools and two short Loom videos, so have those links ready.', 'Start here'), ('apply-cohort.html', 'Apply to the cohort', 'The next AI Automation Cohort starts on March 3, 2027. No coding or experience needed. ' + FEE_TEXT + '.', 'Cohort'), ('#', 'Get event updates', 'Hear about our events as soon as they\'re announced.', 'Events'), (YOUTUBE_URL, 'Subscribe on YouTube', 'Watch recordings of our Show and Tell sessions.', 'YouTube')]) + '</div></section>')
+  + rows([('@@APPLY@@', 'Apply to the community', 'For people already building. You\'ll share your goal, your tools and two short Loom videos, so have those links ready.', 'Start here'), ('apply-cohort.html', 'Apply to the cohort', 'The next AI Automation Cohort starts on @@START@@. No coding or experience needed. ' + FEE_TEXT + '.', 'Cohort'), ('#', 'Get event updates', 'Hear about our events as soon as they\'re announced.', 'Events'), (YOUTUBE_URL, 'Subscribe on YouTube', 'Watch recordings of our Show and Tell sessions.', 'YouTube')]) + '</div></section>')
 
 # ------------------------------------------------------------------ merch shop
 # Prices are placeholders until confirmed. A product with photos uses them; the rest are drawn here until they have photos.
@@ -802,7 +841,6 @@ page('cart.html', 'Your cart', '',
   </div></section>''')
 
 # ------------------------------------------------------------------ blog
-BLOG_DATE = 'November 5, 2026'
 S_OPENAI = ('OpenAI model list', 'https://developers.openai.com/api/docs/models')
 S_GOOGLE = ('Gemini API changelog', 'https://aistudio.google.com/docs/changelog')
 S_MAKE = ('Make pricing', 'https://www.make.com/en/pricing')
@@ -813,206 +851,7 @@ S_YARN = ('YarnGPT on GitHub', 'https://github.com/saheedniyi02/yarngpt')
 S_LELAPA = ('Princeton Africa World: Lelapa AI launches InkubaLM', 'https://africaworld.princeton.edu/news/2024/lelapa-ai-launches-africa%E2%80%99s-first-ai-large-language-model')
 S_ITWEB = ("ITWeb Africa: Africa's languages are becoming the next AI battleground", 'https://itweb.africa/article/africas-languages-are-becoming-the-next-ai-battleground/KA3Ww7dzdaVqrydZ')
 
-POSTS = [
- dict(slug='what-is-no-code', cat='Start here', title='What is no-code? A plain guide for African builders',
-  dek='You can build real software without writing traditional code. Here is what that means and where to begin.', sources=[], body="""
-<p>Think about building with LEGO. The pieces already exist, so your job is to decide what to make and how the pieces connect. No-code tools work the same way for software. You arrange ready-made parts on a screen, and the tool handles the code underneath.</p>
-<h2>What people actually build</h2>
-<p>No-code usually falls into three groups:</p>
-<ul>
-<li><b>Apps and websites.</b> Booking pages, customer portals and internal dashboards.</li>
-<li><b>Databases.</b> Tools like Airtable look like spreadsheets but can run a whole operation.</li>
-<li><b>Automations.</b> Work that runs by itself. Tools like Make, n8n and Zapier connect your other apps so information moves without anyone copying and pasting.</li>
-</ul>
-<h2>A small example</h2>
-<p>Imagine a tailor in Ibadan who takes orders through a form. Every morning, someone copies each order into a sheet, then messages the customer to confirm. With an automation, a new form entry adds a row to the sheet and sends the confirmation immediately. Nobody has to touch it, and nothing gets forgotten.</p>
-<h2>Is it "real" building?</h2>
-<p>Yes. A customer does not care how the system was made. They care that their order was confirmed. You still have to think clearly about steps, data and what happens when something goes wrong. Those are the same skills developers use, and they are the hard part.</p>
-<p>No-code does have limits. Very large systems, unusual features and tight performance needs can outgrow it. Many builders reach that point later and bring in a developer for that one piece. That is a good problem to have.</p>
-<h2>Where to start</h2>
-<ol>
-<li><b>Pick one annoying task.</b> Choose something you repeat every week.</li>
-<li><b>Write the steps down in plain words.</b> "When this happens, do that, then do this."</li>
-<li><b>Build it in a free plan.</b> Make and n8n are both good places to begin.</li>
-<li><b>Show someone.</b> Other builders will spot problems and shortcuts you missed.</li>
-</ol>
-"""),
- dict(slug='no-code-and-ai', cat='AI automation', title='No-code and AI: how they work together',
-  dek='Automation follows rules. AI handles judgement. Most useful systems need both, and knowing where each belongs is the skill.', sources=[], body="""
-<p>People often talk about no-code and AI as if they were the same thing. They do different jobs, and the best systems use each for what it does well.</p>
-<p>A simple way to picture it: <b>automation is the hands, and AI is the judgement.</b> The automation moves information reliably from one place to another. The AI reads something messy and decides what it means.</p>
-<h2>Where the rules stop working</h2>
-<p>Take a delivery company in Nairobi that receives requests on WhatsApp. Customers write in every style imaginable: "pls pick up from Westlands 2pm", a voice note, or a long story with the address in the middle.</p>
-<p>A rules-based automation cannot read that reliably. A language model can. It turns the message into clean fields such as pickup point, time and urgency. From there, the automation takes over: it creates the record, assigns a rider and sends a confirmation.</p>
-<h2>Three jobs AI does well inside a workflow</h2>
-<ul>
-<li><b>Extract.</b> Pull details out of messages, receipts and documents.</li>
-<li><b>Classify.</b> Decide whether this is a complaint, an order or a question, and route it.</li>
-<li><b>Draft.</b> Write a first version of a reply for a person to approve, or send it directly when the risk is low.</li>
-</ul>
-<h2>Where people go wrong</h2>
-<p>The common mistake is giving AI work that a simple rule could do. If you need to add 7.5% VAT, use a calculation. A model might get it right most of the time, but "most of the time" is not good enough for money. It also costs more and runs slower.</p>
-<p>Use this test: <b>if you can write the rule down, write the rule. If a person would have to read and think, consider AI.</b></p>
-<h2>Keep a person where it matters</h2>
-<p>AI will sometimes be wrong while sounding completely sure. So check its output before it reaches anything important. Confirm that required fields are present, send low-confidence cases to a human, and keep a log so you can see what happened. For refunds, debt conversations or anything legal, a person should review the result.</p>
-<h2>Start small</h2>
-<p>Take an automation you already have and add one AI step where someone currently has to read and sort. Run it beside your current process for a week, compare the results, and only then let it run alone.</p>
-"""),
- dict(slug='make-vs-n8n-vs-zapier', cat='Tools', title='Make, n8n or Zapier: which should you learn first?',
-  dek='They do similar jobs but charge very differently. That difference matters more when you are paying in dollars or euros.', sources=[S_MAKE, S_N8N], body="""
-<p>All three tools connect apps and run workflows. Once you understand one, the others come quickly, because triggers, actions and data mapping work much the same way. So the first choice matters less than people think. Cost is usually the deciding factor.</p>
-<h2>How each one charges</h2>
-<ul>
-<li><b>Make</b> bills in credits, and most actions use one credit. Its free plan includes 1,000 credits a month.</li>
-<li><b>n8n</b> cloud bills per workflow run, however many steps that run contains. On annual billing, its pricing page lists Starter at €20 a month for 2,500 runs and Pro at €50 a month for 10,000. There is also a self-hosted version available on GitHub, where you run it on your own server.</li>
-<li><b>Zapier</b> bills per task, which roughly means each action that completes. It is known for being very easy to use and for connecting to a huge number of apps.</li>
-</ul>
-<h2>The same job on each tool</h2>
-<p>Say your workflow has five steps and runs 1,000 times a month. On Make, that is about 5,000 credits. On Zapier, it is roughly 4,000 tasks, since the starting trigger does not count. On n8n, it is 1,000 runs.</p>
-<p>Longer workflows make the gap wider. That is why n8n becomes attractive for complex systems, and why it is worth doing this sum before you promise a client a monthly cost.</p>
-<h2>What we would tell a friend</h2>
-<ul>
-<li><b>Complete beginner:</b> start with Make. You can see the data moving through each step on a visual canvas, which makes learning much easier.</li>
-<li><b>Comfortable with technical things, or building heavy workflows:</b> learn n8n. Self-hosting can keep costs down, but you become responsible for keeping the server running, updated and secure.</li>
-<li><b>Connecting two popular apps quickly:</b> Zapier is often the fastest way to get it done.</li>
-</ul>
-<h2>Before you commit</h2>
-<p>Pricing changes often, so check each tool's own pricing page rather than a blog post, including this one. Then work out the cost in naira or shillings for your real volume, and leave room for exchange-rate moves.</p>
-"""),
- dict(slug='ai-models-november-2026', cat='New models', title='The AI models worth knowing right now',
-  dek='A plain snapshot of the current line-ups from OpenAI, Google and Anthropic, and how to choose between them for automation work.', sources=[S_OPENAI, S_GOOGLE], body="""
-<p>This list goes out of date quickly, so treat it as a snapshot from November 2026 and check each company's own page before you build on it.</p>
-<h2>OpenAI</h2>
-<ul>
-<li><b>GPT-6 Astra.</b> Its most capable model, for complex reasoning, coding and demanding work.</li>
-<li><b>GPT-6.1 Sol.</b> Close to Astra on complex work, at a lower cost.</li>
-<li><b>GPT-6.1 Terra.</b> Fast and efficient, aimed at visual reasoning, computer use and natural writing.</li>
-<li><b>GPT-6 Luna.</b> Its most efficient model, for focused, high-volume tasks where cost matters.</li>
-</ul>
-<h2>Google</h2>
-<ul>
-<li><b>Gemini 4 Argon.</b> The most capable model in Google's recent changelog, built for complex coding, agent, maths and science tasks. It became generally available on October 13, 2026.</li>
-<li><b>Gemini 3.8 Flash.</b> Described as Google's most intelligent Flash model.</li>
-<li><b>Gemini 3.8 Flash TTS and Flash-Lite TTS.</b> Text-to-speech models, which are useful for voice work.</li>
-</ul>
-<p>One thing to act on: from December 1, 2026, Google will route API requests for Gemini 2.5 Pro and 2.5 Flash to newer models. If you have an automation still using either one, test it now.</p>
-<h2>Anthropic</h2>
-<p>Anthropic's current Claude models are Fable 5.1, Opus 5.5, Sonnet 5.5 and Haiku 5.5. Check Anthropic's documentation for what each is best suited to and what it costs.</p>
-<h2>How to choose for automation</h2>
-<p>The newest and strongest model is rarely the right default. Most workflow steps are small jobs, like sorting a message or pulling a date from an email.</p>
-<ol>
-<li><b>Start with the cheapest model that might work.</b> Move up only when it actually fails.</li>
-<li><b>Test on your own messy data.</b> Use 20 or 30 real examples, including Pidgin, Sheng, typos and whatever else your customers really send. Published rankings will not tell you how a model handles that.</li>
-<li><b>Mix models in one system.</b> Use a low-cost model for high-volume sorting and a stronger one for the rare hard cases.</li>
-<li><b>Work out the cost per job.</b> Multiply that by your monthly volume before you promise anyone a price.</li>
-<li><b>Expect models to retire.</b> Keep the model name in one easy-to-change setting, and re-test whenever you switch.</li>
-</ol>
-"""),
- dict(slug='whatsapp-automation-costs', cat='Building in Africa', title='WhatsApp automation: what changed and what it costs',
-  dek="Meta's pricing changed on October 1, 2026, including for replies to customers. Here is what builders need to know before they quote a client.", sources=[S_META, S_DUBAWA], body="""
-<p>For many African businesses, WhatsApp is the main customer channel, so it is often the first thing clients ask you to automate. Pricing rules on the WhatsApp Business Platform changed recently, and an old tutorial may give you the wrong numbers.</p>
-<h2>First, who pays</h2>
-<p>This pricing applies to businesses using the platform. Meta does not charge for messages that users send to businesses. A claim that ordinary Nigerians would pay ₦14 a message was fact-checked as misleading.</p>
-<h2>How billing works</h2>
-<p>Since July 1, 2025, Meta has charged per delivered message, based on the message's category and the recipient's country. The main categories are:</p>
-<ul>
-<li><b>Marketing.</b> Template messages such as promotions and offers.</li>
-<li><b>Utility.</b> Template messages about something already happening, such as an order update or a payment reminder.</li>
-<li><b>Authentication.</b> Template messages such as one-time passwords.</li>
-<li><b>Service.</b> Ordinary free-form replies, sent after a customer messages you.</li>
-</ul>
-<h2>What changed on October 1, 2026</h2>
-<ul>
-<li>Each business phone number now gets <b>1,000 free service messages a month</b>. Charges begin with message 1,001.</li>
-<li><b>Utility templates sent during an open customer-service window are now charged</b> at published rates. They used to be free.</li>
-<li>Businesses needed a payment method on file by September 30, 2026, or their service messages could stop being delivered.</li>
-</ul>
-<p>Nigeria has its own line on Meta's rate card. Rates can change at the start of a quarter, so take the current figure from Meta directly and avoid quoting a number from a social media post.</p>
-<h2>What to do as a builder</h2>
-<ol>
-<li><b>Count messages by category.</b> "How many customers?" is the wrong question. Ask how many marketing, utility and service messages each one will receive.</li>
-<li><b>Audit old automations.</b> A flow that sends order updates inside the service window may have become a new cost since October.</li>
-<li><b>Send fewer, better messages.</b> Combine three status updates into one where you can.</li>
-<li><b>Build in consent and an exit.</b> Only message people who opted in, make it easy to stop, and hand off to a person when someone needs one.</li>
-<li><b>Put the cost in your proposal.</b> Make clear that WhatsApp charges are separate from your fee, so a client is not surprised later.</li>
-</ol>
-"""),
- dict(slug='voice-ai-african-languages', cat='Building in Africa', title='Voice AI in African languages: where things stand',
-  dek='Many customers would rather talk than type. Here is how voice agents work, who is building for African languages, and what to test.', sources=[S_YARN, S_LELAPA, S_ITWEB], body="""
-<p>Across much of Africa, a phone call is still the most natural way to get something done. That makes voice AI especially interesting here. It also makes it harder, because most models were not trained on the way people here speak.</p>
-<h2>How a voice agent works</h2>
-<p>A voice agent is a relay race with three runners:</p>
-<ol>
-<li><b>It listens.</b> Speech-to-text turns the caller's words into text.</li>
-<li><b>It thinks.</b> A language model decides what to say or do next, such as checking a calendar.</li>
-<li><b>It speaks.</b> Text-to-speech turns the reply into a voice.</li>
-</ol>
-<p>Platforms such as Retell AI and VAPI manage this relay, so you can focus on the conversation and on connecting it to your other systems. Every runner adds delay, and long pauses are what make a call feel robotic.</p>
-<h2>Who is working on African languages</h2>
-<ul>
-<li><b>YarnGPT</b> is an open-source text-to-speech model that generates Nigerian-accented English.</li>
-<li><b>Lelapa AI</b> built InkubaLM, a language model covering Swahili, Yoruba, isiXhosa, Hausa and isiZulu.</li>
-<li><b>Intron</b>, a Nigerian startup, has reportedly expanded its Sahara voice model to 57 languages, including 23 African ones.</li>
-</ul>
-<p>This space moves quickly, and a claim on a website does not guarantee a good result on your calls. Test for yourself.</p>
-<h2>What to test before you trust it</h2>
-<ul>
-<li><b>Mixed speech.</b> People switch between English, Pidgin, Yoruba or Sheng in one sentence. Test that, not textbook phrases.</li>
-<li><b>Real phone lines.</b> Background noise and poor connections are normal. Studio-quality samples will flatter any model.</li>
-<li><b>Names, numbers and addresses.</b> Small errors here cause the biggest problems, so have the agent read important details back.</li>
-<li><b>Whether people accept it.</b> A voice can be accurate and still feel wrong. Let real customers listen.</li>
-</ul>
-<h2>Build it responsibly</h2>
-<p>Tell callers they are speaking with an AI, follow local rules on recording and data, and always give people a way to reach a human. This matters most in sensitive conversations such as debt or health.</p>
-<p>A good first project is one narrow job, such as confirming appointments in one language. Get that working well before you add more.</p>
-"""),
- dict(slug='first-paying-automation-client', cat='Career', title='How to land your first paying automation client',
-  dek='You do not need a big portfolio. You need one real problem solved, and a clear way to explain what it was worth.', sources=[], body="""
-<p>Most people wait too long, because they think they need more courses first. What gets you hired is proof that you can solve one real problem.</p>
-<h2>1. Build one thing for a real person</h2>
-<p>Find a business you can already reach: a relative's shop, a friend's clinic or the logistics company a former classmate works at. Ask what they repeat every week and hate doing. Then build a fix. Doing this first one free or cheaply is fine, as long as you agree you can talk about the result.</p>
-<h2>2. Measure before and after</h2>
-<p>Note how long the task took before, and how long it takes now. "This used to take Amaka two hours a day and now takes ten minutes" will do more for you than a list of tools. Ask for permission to share it, and ask for a short testimonial while the win is fresh.</p>
-<h2>3. Sell the result, not the tools</h2>
-<p>A business owner does not wake up wanting an n8n workflow. They want fewer missed orders, faster follow-up or fewer hours of admin. Say "I'll make sure every lead gets a reply within five minutes", then explain the tools only if they ask.</p>
-<h2>4. Reach out with something specific</h2>
-<p>Generic messages get ignored. Look at how a business works, spot one thing you could improve, and say so: "I tried booking on your site and only got a form with no confirmation. I can fix that so customers get an instant reply." A short screen recording of a demo works even better.</p>
-<h2>5. Price it sensibly</h2>
-<ul>
-<li><b>Set a fixed project price.</b> Charging by the hour punishes you for getting faster.</li>
-<li><b>Tie it to the value.</b> Work out roughly what the problem costs them each month, and price well below that.</li>
-<li><b>Take part of it up front.</b> A deposit filters out people who are not serious.</li>
-<li><b>Charge for upkeep.</b> Tools change and things break. A monthly maintenance fee is fair, and it gives you steadier income.</li>
-<li><b>Separate tool costs.</b> Be clear about who pays for subscriptions, API usage and messaging.</li>
-</ul>
-<h2>6. Agree the scope in writing</h2>
-<p>Even a short message helps: what you will build, what is not included, how many rounds of changes they get, and when payment is due. It protects your friendship as well as your time. Then hand over simple documentation, and ask who else they know with the same problem.</p>
-"""),
- dict(slug='building-automation-in-africa', cat='Building in Africa', title='Building automation in Africa: what the tutorials leave out',
-  dek='Most tutorials assume steady internet, card payments and English-speaking customers. Here is how to build for the market you actually work in.', sources=[], body="""
-<p>Most automation tutorials are made for somewhere else. They assume stable connections, international cards and customers who fill in forms correctly. A system that works in that demo can fall apart in Lagos or Kampala.</p>
-<h2>Assume the connection will fail</h2>
-<p>Networks drop and services time out. A cloud automation keeps running, but the people and systems around it may not respond, so plan for that:</p>
-<ul>
-<li><b>Set up retries</b> so a failed step tries again before it gives up.</li>
-<li><b>Add failure alerts</b> so a person knows when something has stopped.</li>
-<li><b>Never lose the data.</b> Save the incoming record first, then process it. If a later step fails, you can run it again.</li>
-<li><b>Avoid doing things twice.</b> A retry should not charge or message someone a second time. Check whether a step already happened.</li>
-</ul>
-<h2>Budget for currency</h2>
-<p>Many tools bill in dollars or euros, while your client earns in naira, cedis or shillings. A cost that looks fine today can look very different after an exchange-rate move. Quote with a buffer, state which currency each tool bills in, and agree who carries that risk. Virtual dollar cards can also fail on some services, so test payment before you commit a client to a tool.</p>
-<h2>Meet customers where they are</h2>
-<p>A beautifully built web form may lose to a simple WhatsApp conversation or a phone call. Start with the channel customers already use, even if it is less tidy to automate.</p>
-<h2>Plan for local payments</h2>
-<p>Many customers pay by bank transfer, mobile money or USSD, and not by card. Providers such as Paystack and Flutterwave can notify your automation by webhook when a payment succeeds. Bank transfers often need a matching step, because the amount or the reference may not be exact. Decide what happens when they do not match, and send those cases to a person.</p>
-<h2>Handle messy, multilingual data</h2>
-<p>People mix languages and spell the same name in many ways. Phone numbers appear with and without country codes. Clean this up early: store numbers in one format, and test any AI step on real local messages.</p>
-<h2>Take data protection seriously</h2>
-<p>Nigeria has its Data Protection Act of 2023, Kenya has its Data Protection Act of 2019, and other countries have their own laws. Collect only what you need, know which tools hold the data, and get proper advice for sensitive work. This also helps you win bigger clients, who will ask.</p>
-<h2>The opportunity</h2>
-<p>These constraints are also your advantage. Someone who understands how business really works here can build things that a tool made elsewhere will never handle properly.</p>
-"""),
-]
+# POSTS is loaded from content/blog/ near the top of this file.
 
 def read_mins(html):
     return max(2, round(len(re.sub(r'<[^>]+>', ' ', html).split()) / 200))
@@ -1030,14 +869,15 @@ for i, p in enumerate(POSTS):
     src = ''
     if p['sources']:
         src = '<aside class="sources"><span class="tag">Sources</span><ul>' + ''.join(f'<li><a href="{u}" target="_blank" rel="noopener">{t}</a></li>' for t, u in p['sources']) + '</ul></aside>'
+    cover = f'<img class="post-cover" src="{p["cover"].lstrip("/")}" alt="">' if p['cover'] else ''
     body = f"""<article class="post-page">
     <header class="pagehero"><div class="frame">
       {crumb(HOME, ('blog.html', 'Blog'), (None, p['cat']))}
       <h1 class="big">{p['title']}</h1>
       <p>{p['dek']}</p>
-      <div class="post-meta">{BLOG_DATE} / {read_mins(p['body'])} min read / Nocodesquare</div>
+      <div class="post-meta">{long_date(p['date'])} / {read_mins(p['body'])} min read / Nocodesquare</div>
     </div></header>
-    <div class="prose">{p['body']}{src}
+    <div class="prose">{cover}{p['body']}{src}
       <div class="post-cta"><b>Building something like this?</b><span>Bring your questions to other builders in the community.</span><a class="slab" href="@@APPLY@@">Apply to the community</a></div>
     </div>
   </article>

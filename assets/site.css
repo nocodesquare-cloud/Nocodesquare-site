@@ -802,3 +802,6 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 
 /* No second rule under the newsletter band */
 .newsletter + .sitemap { border-top: 0; }
+
+/* Blog cover image set in the admin */
+.post-cover { display: block; width: 100%; height: auto; max-height: 460px; object-fit: cover; margin: 0 0 1.6rem; border: 1.5px solid var(--line); }

@@ -1,0 +1,105 @@
+# Nocodesquare admin (Decap CMS). Lives at https://nocodesquare.com/admin
+# Sign-in is with GitHub: only accounts with write access to the repository can edit.
+backend:
+  name: github
+  repo: nocodesquare-cloud/Nocodesquare-site
+  branch: main
+  base_url: https://nocodesquare.com
+  auth_endpoint: api/auth
+  commit_messages:
+    create: 'Admin: add {{collection}} "{{slug}}"'
+    update: 'Admin: update {{collection}} "{{slug}}"'
+    delete: 'Admin: delete {{collection}} "{{slug}}"'
+    uploadMedia: 'Admin: upload "{{path}}"'
+    deleteMedia: 'Admin: delete "{{path}}"'
+
+# On a computer running `npx decap-server`, the admin edits the local files instead of GitHub
+local_backend: true
+
+# Drafts: save work in progress, review it, then publish. Publishing puts it live.
+publish_mode: editorial_workflow
+
+site_url: https://nocodesquare.com
+display_url: https://nocodesquare.com
+logo_url: https://nocodesquare.com/favicon.svg
+locale: en
+
+media_folder: img/blog
+public_folder: img/blog
+
+collections:
+  - name: blog
+    label: Blog posts
+    label_singular: Blog post
+    description: Articles on the blog. Each one becomes a page at nocodesquare.com/blog-<slug>.html
+    folder: content/blog
+    create: true
+    delete: true
+    extension: md
+    format: json-frontmatter
+    slug: '{{slug}}'
+    summary: '{{title}}  ·  {{cat}}  ·  {{date}}'
+    sortable_fields: ['date', 'title', 'cat']
+    view_groups:
+      - { label: Category, field: cat }
+    preview_path: 'blog-{{slug}}.html'
+    fields:
+      - { label: Title, name: title, widget: string, hint: 'Keep it clear and specific. Shown as the page heading.' }
+      - { label: Summary, name: dek, widget: text, hint: 'One or two sentences. Shown under the title and on the blog card.' }
+      - label: Category
+        name: cat
+        widget: select
+        default: Building in Africa
+        options: ['Start here', 'AI automation', 'Tools', 'New models', 'Building in Africa', 'Career', 'Community', 'News']
+      - label: Publish date
+        name: date
+        widget: datetime
+        format: 'YYYY-MM-DD'
+        date_format: 'D MMMM YYYY'
+        time_format: false
+        picker_utc: true
+        hint: 'Newest posts appear first on the blog.'
+      - { label: Cover image, name: cover, widget: image, required: false, default: '', hint: 'Optional. Shown at the top of the article. Wide images work best.' }
+      - label: Article
+        name: body
+        widget: markdown
+        buttons: [bold, italic, link, heading-two, heading-three, quote, bulleted-list, numbered-list, code]
+        editor_components: [image]
+        hint: 'Use Heading 2 for section titles. Paste plain text if formatting looks odd.'
+      - label: Sources
+        name: sources
+        widget: list
+        required: false
+        allow_add: true
+        summary: '{{fields.title}}'
+        hint: 'Optional. Links to where facts and figures came from.'
+        fields:
+          - { label: Name, name: title, widget: string }
+          - { label: Link, name: url, widget: string, pattern: ['^https?://', 'Must start with http:// or https://'] }
+      - { label: Order, name: order, widget: hidden, default: 0 }
+
+  - name: settings
+    label: Site settings
+    description: Details used across the whole site.
+    editor: { preview: false }
+    files:
+      - label: General settings
+        name: general
+        file: content/settings.json
+        format: json
+        fields:
+          - label: Next cohort start date
+            name: cohort_start
+            widget: datetime
+            format: 'YYYY-MM-DD'
+            date_format: 'D MMMM YYYY'
+            time_format: false
+            picker_utc: true
+            hint: 'Drives the countdown and every mention of the start date.'
+          - { label: Cohort fee in naira (₦), name: fee_ngn, widget: number, value_type: int, min: 0 }
+          - { label: Cohort fee in US dollars ($), name: fee_usd, widget: number, value_type: int, min: 0 }
+          - { label: Cohort fee in Kenyan shillings (KSh), name: fee_kes, widget: number, value_type: int, min: 0 }
+          - { label: YouTube link, name: youtube_url, widget: string }
+          - { label: LinkedIn link, name: linkedin_url, widget: string }
+          - { label: Instagram link, name: instagram_url, widget: string }
+          - { label: Newsletter webhook, name: newsletter_webhook, widget: string, required: false, hint: 'Make.com, n8n or Zapier webhook that receives newsletter sign-ups. Leave empty until it is set up.' }
