@@ -4,7 +4,7 @@
   "cat": "New models",
   "date": "2026-11-05",
   "order": 3,
-  "cover": "",
+  "cover": "img/blog/images-2-.png",
   "sources": [
     {
       "title": "OpenAI model list",
