@@ -14,6 +14,6 @@
   "vars": {
     // From the GitHub OAuth App (public, safe to keep here). The matching secret,
     // GITHUB_CLIENT_SECRET, is set in Cloudflare: Worker > Settings > Variables and Secrets.
-    "GITHUB_CLIENT_ID": ""
+    "GITHUB_CLIENT_ID": "Ov23lizTXiCixGMNrPXU"
   }
 }
