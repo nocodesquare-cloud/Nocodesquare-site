@@ -8,3 +8,5 @@ nocodesquare.html
 nocodesquare-v2.html
 nocodesquare-v3.html
 build_site_bold_version.py
+# Guides written for the team, kept locally
+guides/
