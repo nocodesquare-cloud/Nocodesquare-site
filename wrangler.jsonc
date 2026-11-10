@@ -5,6 +5,8 @@
   "name": "nocodesquare",
   "main": "worker.js",
   "compatibility_date": "2026-11-01",
+  // Keep anything set in the Cloudflare dashboard (e.g. sign-in secret) when the site redeploys
+  "keep_vars": true,
   "assets": {
     "directory": "./site",
     "binding": "ASSETS",
