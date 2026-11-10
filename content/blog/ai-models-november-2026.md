@@ -1,5 +1,5 @@
 {
-  "title": "The AI models worth knowing right now",
+"title": "The AI models worth knowing right now (Updated)",
   "dek": "A plain snapshot of the current line-ups from OpenAI, Google and Anthropic, and how to choose between them for automation work.",
   "cat": "New models",
   "date": "2026-11-05",
