@@ -5,6 +5,6 @@
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./site",
-    "html_handling": "none"
+    "html_handling": "auto-trailing-slash"
   }
 }
