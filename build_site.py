@@ -1239,3 +1239,7 @@ print(sorted(f for f in os.listdir(OUT) if f.endswith('.html')))
 # Agent mode: a Markdown copy of every page, plus llms.txt and llms-full.txt for AI agents
 import agent_md
 agent_md.build(OUT)
+
+# Cloudflare headers: declare UTF-8 on the agent files so ₦ and other symbols display correctly
+with open(os.path.join(OUT, '_headers'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('/*.md\n  Content-Type: text/markdown; charset=utf-8\n/*.txt\n  Content-Type: text/plain; charset=utf-8\n')
