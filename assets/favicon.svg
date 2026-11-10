@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-50 -50 100 100">
+  <style>.r{fill:#393A47}@media (prefers-color-scheme:dark){.r{fill:#FFF}}</style>
+  <polygon fill="#5ECDCB" points="0,-50 43.3,-25 0,0 -43.3,-25"/>
+  <polygon fill="#A86C48" points="-43.3,-25 0,0 0,50 -43.3,25"/>
+  <polygon class="r" points="0,0 43.3,-25 43.3,25 0,50"/>
+</svg>

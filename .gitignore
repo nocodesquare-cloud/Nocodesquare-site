@@ -1,0 +1,10 @@
+# Built output: Cloudflare Pages rebuilds this from build_site.py
+site/
+__pycache__/
+*.pyc
+.claude/
+# Early drafts, kept locally only
+nocodesquare.html
+nocodesquare-v2.html
+nocodesquare-v3.html
+build_site_bold_version.py
