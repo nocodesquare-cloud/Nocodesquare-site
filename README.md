@@ -16,7 +16,10 @@ python build_site.py
 python serve.py        # http://localhost:8080
 ```
 
-## Hosting (Cloudflare Pages)
+## Hosting (Cloudflare Workers, static assets)
+
+`wrangler.jsonc` tells Cloudflare to serve the `site/` folder.
 
 - Build command: `python build_site.py`
-- Output directory: `site`
+- Deploy command: `npx wrangler deploy`
+- Every push to `main` rebuilds and redeploys the live site.
