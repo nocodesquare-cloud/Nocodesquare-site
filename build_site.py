@@ -555,6 +555,24 @@ MEMBER_STORIES = [{
     'The Friday and Saturday show and tell sessions are what keep me coming back. You see what other builders are shipping in real time, then present your own work to people who actually understand it. You cannot get that anywhere else. The Tuesday and Wednesday sessions are valuable too, but the show and tell culture is what makes Nocodesquare different from every other community I have seen.',
     'If you build and want to be around other people who build, join. Nocodesquare is not a course. It is a community of people actually executing in the real world and sharing what they learn along the way. The show and tell sessions alone are worth it, because you learn as much from seeing how others approach problems as you do from building yourself. Come ready to show your work and give feedback on others\', and you will get far more out of it than you expect.',
   ],
+}, {
+  'slug': 'story-odejayi-motunrayo.html',
+  'name': 'Odejayi Motunrayo',
+  'first': 'Motunrayo',
+  'headline': 'From 100 level to US clients.',
+  'role': 'Freelance Automation Specialist and recent University of Ibadan graduate. Community member since late 2023',
+  'photo': 'img/odejayi-motunrayo.jpg',
+  'title': 'From a Zapier flier <i>to US clients.</i>',
+  'excerpt': ['When I found Nocodesquare, I was a struggling 100 level student with little to no knowledge of tech, looking for ways to make money.',
+              'Since then, I have worked with several real estate clients in the US, optimising and automating their systems.'],
+  'story': [
+    'Before I joined Nocodesquare, I had little to no knowledge of tech. What caught my attention was a flier for a three-day Zapier class. I had heard the word "Zapier" before, from someone I knew who made money online, and seeing it again made me curious.',
+    'At the time, I was a struggling 100 level student at the University of Ibadan, looking for ways to make money. So I reached out at the end of 2023.',
+    'By the time I got in touch, the cohort had already ended. Instead of telling me to wait for the next one, AYB started teaching me one on one. That is the part of my story I am most grateful for, and I always will be.',
+    'Alongside those one-on-one lessons, the daily 8pm community classes became where I learnt, asked questions and talked through what I was building.',
+    'Since then, I have worked with several real estate clients in the US, optimising and automating their systems. I have also just finished university, and I freelance in AI automation today.',
+    'If you are unsure about joining, do not think twice after reading this. If you are in the AI automation and no-code world, this is the best community you could be part of.',
+  ],
 }]
 def story_card(m):
     quote = ''.join(f'<p>{x}</p>' for x in m['excerpt'])
