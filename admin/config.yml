@@ -113,6 +113,54 @@ collections:
       - { label: Button link, name: link, widget: string, required: false, hint: 'Optional. A page on the site (e.g. apply-cohort.html) or a full https:// link.' }
       - { label: Button text, name: link_label, widget: string, required: false, hint: 'Optional. Defaults to "Find out more".' }
 
+  - name: jobs
+    label: Jobs
+    label_singular: Job
+    description: Open roles on the Jobs page (nocodesquare.com/jobs). A job disappears by itself after its closing date.
+    folder: content/jobs
+    create: true
+    delete: true
+    extension: json
+    format: json
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    summary: '{{title}}  ·  {{company}}  ·  closes {{closes}}'
+    sortable_fields: ['posted', 'closes', 'title', 'company']
+    preview_path: jobs.html
+    editor: { preview: false }
+    fields:
+      - { label: Job title, name: title, widget: string, hint: 'Example: Automation Specialist (Make.com and Airtable)' }
+      - { label: Company, name: company, widget: string }
+      - { label: Location, name: location, widget: string, required: false, hint: 'Example: Remote, Lagos, or Hybrid (Nairobi)' }
+      - label: Type
+        name: type
+        widget: select
+        required: false
+        options: ['Full-time', 'Part-time', 'Contract', 'Freelance', 'Internship']
+      - { label: Pay, name: pay, widget: string, required: false, hint: 'Optional. Example: ₦400,000 a month, or $25 an hour' }
+      - label: Date posted
+        name: posted
+        widget: datetime
+        format: 'YYYY-MM-DD'
+        date_format: 'D MMMM YYYY'
+        time_format: false
+        picker_utc: true
+      - label: Closing date
+        name: closes
+        widget: datetime
+        required: false
+        format: 'YYYY-MM-DD'
+        date_format: 'D MMMM YYYY'
+        time_format: false
+        picker_utc: true
+        hint: 'Optional but recommended. The job is hidden from the site after this day.'
+      - label: About the role
+        name: description
+        widget: markdown
+        buttons: [bold, italic, link, bulleted-list]
+        editor_components: []
+        hint: 'What the job is, the tools involved, and who it suits. A short paragraph and a few bullet points works well.'
+      - { label: How to apply, name: apply, widget: string, hint: 'A link to the application page (https://...) or an email address.' }
+
   - name: gallery
     label: Gallery
     label_singular: Photo

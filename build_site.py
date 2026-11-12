@@ -151,6 +151,7 @@ FOOTER = '''<footer>
     <div><b><a href="events.html">Events</a></b><a href="events.html">Coming soon</a></div>
     <div><b><a href="gallery.html">Gallery</a></b><a href="gallery.html">Moments we keep</a></div>
     <div><b><a href="news.html">News</a></b><a href="news.html">Latest updates</a></div>
+    <div><b><a href="jobs.html">Jobs</a></b><a href="jobs.html">Open roles</a></div>
     <div><b><a href="blog.html">Blog</a></b><a href="blog.html">All articles</a>@@FOOT_POSTS@@</div>
     <div><b><a href="merch.html">Merch</a></b><a href="merch.html">Shop</a><a href="cart.html">Your cart</a></div>
     <div><b><a href="@@APPLY@@">Apply</a></b><a href="join.html">Every way in</a><a href="@@YT@@"@@YTA@@>YouTube</a></div>
@@ -784,6 +785,45 @@ page('news.html', 'News', '',
   hero('', '', '', crumb(HOME, (None, 'News')), 'What\'s new at <i>Nocodesquare.</i>', 'Updates from the community: new cohorts, events, launches and milestones.')
   + '<section class="sheet news-sheet"><div class="frame"><div class="news-list">' + NEWS_BODY + '</div></div></section>'
   + nxt('@@APPLY@@', 'Want to be part of the next update?', 'Apply to the community'))
+
+# ------------------------------------------------------------------ jobs (added in /admin, content/jobs/*.json)
+def load_jobs(folder='content/jobs'):
+    items, today = [], date.today().isoformat()
+    if os.path.isdir(folder):
+        for name in os.listdir(folder):
+            if not name.endswith('.json'): continue
+            j = json.load(open(os.path.join(folder, name), encoding='utf-8-sig'))
+            if not j.get('title') or not j.get('apply'): continue
+            j['posted'] = str(j.get('posted') or today)[:10]
+            j['closes'] = str(j.get('closes') or '')[:10]
+            if j['closes'] and j['closes'] < today: continue   # closed: leave it off the page
+            j['slug'] = name[:-5]
+            items.append(j)
+    items.sort(key=lambda j: (j['posted'], j['slug']), reverse=True)
+    return items
+
+JOBS_ITEMS = load_jobs()
+def job_card(j):
+    import html as h
+    e = lambda k: h.escape(str(j.get(k) or ''))
+    facts = ''.join(f'<span>{e(k)}</span>' for k in ('location', 'type', 'pay') if j.get(k))
+    apply = j['apply'].strip()
+    if '@' in apply and not apply.startswith(('http', 'mailto:')): apply = 'mailto:' + apply
+    ext = ' target="_blank" rel="noopener"' if apply.startswith('http') else ''
+    closes = f' · Closes {long_date(j["closes"])}' if j['closes'] else ''
+    return (f'<article class="job" id="{j["slug"]}" data-closes="{j["closes"]}">'
+            f'<div class="job-head"><h2>{e("title")}</h2><p class="job-co">{e("company")}</p><div class="job-facts">{facts}</div></div>'
+            f'<div class="job-desc">{mdlite.to_html(j.get("description") or "")}</div>'
+            f'<div class="job-foot"><span class="job-date">Posted {long_date(j["posted"])}{closes}</span>'
+            f'<a class="slab" href="{h.escape(apply)}"{ext}>Apply for this role</a></div></article>')
+
+JOBS_EMPTY = '<div class="jobs-empty"><p class="tag">No open roles right now</p><p>New roles in AI, automation and no-code are posted here as they come in. Members also share opportunities inside the community every week.</p><a class="slab" href="@@APPLY@@">Join the community</a></div>'
+JOBS_BODY = '<div class="jobs-list">' + ''.join(job_card(j) for j in JOBS_ITEMS) + '</div>' + (JOBS_EMPTY if not JOBS_ITEMS else JOBS_EMPTY.replace('class="jobs-empty"', 'class="jobs-empty" hidden'))
+JOBS_BODY += '<script>(function(){var t=new Date().toISOString().slice(0,10),left=0;document.querySelectorAll(".job").forEach(function(j){if(j.dataset.closes&&j.dataset.closes<t)j.remove();else left++;});if(!left){var e=document.querySelector(".jobs-empty");if(e)e.hidden=false;}})();</script>'
+page('jobs.html', 'Jobs', '',
+  hero('', '', '', crumb(HOME, (None, 'Jobs')), 'Jobs in <i>AI and automation.</i>', 'Open roles for no-code, AI and automation builders: full-time, contract and freelance.')
+  + '<section class="sheet jobs-sheet"><div class="frame">' + JOBS_BODY + '</div></section>'
+  + nxt('freelance-corner.html', 'Freelancing?', 'Visit the Freelance Corner'))
 
 TALLY_LOADER = """<script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>"""
 def tally_embed(form_id, title, extra=''):

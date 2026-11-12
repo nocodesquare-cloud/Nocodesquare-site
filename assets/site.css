@@ -865,3 +865,19 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 
 /* the menu sits just below the cohort ticker while it is showing */
 .nav { top: calc(env(safe-area-inset-top, 0px) + var(--bar-h, 0px)); }
+
+/* ---------- jobs ---------- */
+.jobs-sheet .frame { display: block; }
+.jobs-list { display: grid; gap: 1.2rem; max-width: 880px; }
+.job { border: 1.5px solid var(--line); padding: 1.5rem 1.6rem; display: grid; gap: .9rem; }
+.job-head h2 { font-size: 1.4rem; line-height: 1.2; margin: 0; }
+.job-co { margin: .25rem 0 0; font-weight: 700; }
+.job-facts { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .7rem; }
+.job-facts span { font-family: "DM Mono", monospace; font-size: .74rem; letter-spacing: .05em; text-transform: uppercase; border: 1.5px solid var(--line); padding: .25rem .55rem; }
+.job-desc p { margin: 0 0 .7rem; line-height: 1.6; }
+.job-desc ul { margin: 0 0 .7rem; padding-left: 1.2rem; line-height: 1.6; }
+.job-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem; padding-top: .9rem; border-top: 1.5px solid var(--line); }
+.job-date { font-size: .84rem; color: var(--muted); }
+.jobs-empty { max-width: 34rem; padding: .5rem 0 1.5rem; }
+.jobs-empty[hidden] { display: none; }
+.jobs-empty p { margin: 0 0 1rem; line-height: 1.6; }
