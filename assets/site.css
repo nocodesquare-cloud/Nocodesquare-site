@@ -827,7 +827,7 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 
 /* ---------- footer links: all eight groups on one line on wide screens ---------- */
 @media (min-width: 900px) {
-  .sitemap { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .9rem; }
+  .sitemap { grid-template-columns: repeat(8, auto); justify-content: space-between; gap: .9rem; }
   .sitemap b { font-size: .86rem; }
   .sitemap a { font-size: .8rem; line-height: 1.35; overflow-wrap: anywhere; }
 }
