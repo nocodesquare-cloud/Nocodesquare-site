@@ -78,6 +78,41 @@ collections:
           - { label: Link, name: url, widget: string, pattern: ['^https?://', 'Must start with http:// or https://'] }
       - { label: Order, name: order, widget: hidden, default: 0 }
 
+  - name: news
+    label: News
+    label_singular: News update
+    description: Short updates on the News page (nocodesquare.com/news). Newest first.
+    folder: content/news
+    create: true
+    delete: true
+    extension: json
+    format: json
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    media_folder: /img/news
+    public_folder: img/news
+    summary: '{{title}}  ·  {{date}}'
+    sortable_fields: ['date', 'title']
+    preview_path: news.html
+    editor: { preview: false }
+    fields:
+      - { label: Headline, name: title, widget: string, hint: 'Short and clear. Example: Applications are open for the March cohort.' }
+      - label: Date
+        name: date
+        widget: datetime
+        format: 'YYYY-MM-DD'
+        date_format: 'D MMMM YYYY'
+        time_format: false
+        picker_utc: true
+      - label: The update
+        name: body
+        widget: markdown
+        buttons: [bold, italic, link, bulleted-list]
+        editor_components: []
+        hint: 'A few sentences is plenty.'
+      - { label: Picture, name: image, widget: image, required: false, hint: 'Optional.' }
+      - { label: Button link, name: link, widget: string, required: false, hint: 'Optional. A page on the site (e.g. apply-cohort.html) or a full https:// link.' }
+      - { label: Button text, name: link_label, widget: string, required: false, hint: 'Optional. Defaults to "Find out more".' }
+
   - name: gallery
     label: Gallery
     label_singular: Photo
@@ -127,6 +162,14 @@ collections:
             time_format: false
             picker_utc: true
             hint: 'Drives the countdown and every mention of the start date.'
+          - label: Cohort ticker at the top of the site
+            name: cohort_banner
+            widget: select
+            default: Automatic
+            options: ['Automatic', 'Always on', 'Off']
+            hint: 'Automatic shows a moving "Apply for the cohort" strip in the days before the start date, and hides it once the cohort starts.'
+          - { label: Days before the start date to show the ticker, name: cohort_banner_days, widget: number, value_type: int, min: 1, max: 120, default: 30 }
+          - { label: Ticker message, name: cohort_banner_text, widget: string, required: false, hint: 'Optional. Leave empty for the standard message with the start date.' }
           - { label: Cohort fee in naira (₦), name: fee_ngn, widget: number, value_type: int, min: 0 }
           - { label: Cohort fee in US dollars ($), name: fee_usd, widget: number, value_type: int, min: 0 }
           - { label: Cohort fee in Kenyan shillings (KSh), name: fee_kes, widget: number, value_type: int, min: 0 }

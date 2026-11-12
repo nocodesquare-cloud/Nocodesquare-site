@@ -85,6 +85,27 @@ CUBE = '''<svg width="0" height="0" style="position:absolute" aria-hidden="true"
   </symbol>
 </svg>'''
 
+# Cohort ticker: a moving strip at the top of every page in the run-up to the cohort.
+# Controlled in /admin > Site settings. "Automatic" shows it for N days before the start date.
+_BANNER_MODE = str(SETTINGS.get('cohort_banner') or 'Automatic')
+_BANNER_DAYS = int(SETTINGS.get('cohort_banner_days') or 30)
+_BANNER_MSG = (SETTINGS.get('cohort_banner_text') or '').strip()
+def cohort_bar():
+    if _BANNER_MODE == 'Off': return ''
+    import html as h
+    start = long_date(SETTINGS['cohort_start'])
+    bits = [h.escape(_BANNER_MSG)] if _BANNER_MSG else ['Applications are open', 'The next AI Automation Cohort starts ' + start, 'Apply for the cohort now']
+    run = ''.join(f'<span>{b}</span>' for b in bits) * 3
+    label = h.escape(_BANNER_MSG) if _BANNER_MSG else 'Applications are open. The next AI Automation Cohort starts ' + start + '. Apply now.'
+    always = 'true' if _BANNER_MODE == 'Always on' else 'false'
+    return f"""<div class="cohort-bar" hidden data-start="{COHORT_START}" data-days="{_BANNER_DAYS}" data-always="{always}">
+  <a href="apply-cohort.html" aria-label="{label}"><div class="cohort-run" aria-hidden="true"><div>{run}</div><div>{run}</div></div></a>
+  <button type="button" class="cohort-x" aria-label="Hide this message">×</button>
+</div>
+<script>(function(){{var b=document.currentScript.previousElementSibling,s=new Date(b.dataset.start),n=new Date(),d=+b.dataset.days;
+var on=b.dataset.always==="true"||(n<s&&n>=new Date(s.getTime()-d*864e5));try{{if(sessionStorage.getItem("ncs-bar-off")===b.dataset.start)on=false}}catch(e){{}}
+if(on)b.hidden=false;b.querySelector(".cohort-x").addEventListener("click",function(){{b.hidden=true;try{{sessionStorage.setItem("ncs-bar-off",b.dataset.start)}}catch(e){{}}}});}})();</script>"""
+
 def header(current):
     here = ' aria-current="page"'
     links = ''.join(f'<a href="{h}"{here if h == current else ""}>{t}</a>' for h, t in NAV)
@@ -129,6 +150,7 @@ FOOTER = '''<footer>
     <div><b><a href="cohort.html">Academy</a></b><a href="cohort.html">Cohort</a><a href="cohort-curriculum.html">Curriculum</a><a href="cohort.html#questions">Questions</a><a href="instructors.html">Meet your instructors</a><a href="academy-testimonials.html">Testimonials</a><a href="apply-cohort.html">Apply to the cohort</a></div>
     <div><b><a href="events.html">Events</a></b><a href="events.html">Coming soon</a></div>
     <div><b><a href="gallery.html">Gallery</a></b><a href="gallery.html">Moments we keep</a></div>
+    <div><b><a href="news.html">News</a></b><a href="news.html">Latest updates</a></div>
     <div><b><a href="blog.html">Blog</a></b><a href="blog.html">All articles</a>@@FOOT_POSTS@@</div>
     <div><b><a href="merch.html">Merch</a></b><a href="merch.html">Shop</a><a href="cart.html">Your cart</a></div>
     <div><b><a href="@@APPLY@@">Apply</a></b><a href="join.html">Every way in</a><a href="@@YT@@"@@YTA@@>YouTube</a></div>
@@ -190,6 +212,7 @@ def page(slug, title, current, body):
 </head>
 <body data-md="@@MD@@">
 {CUBE}
+{COHORT_BAR}
 {header(current)}
 <main>
   {body}
@@ -213,6 +236,7 @@ COMB = '''<figure class="orb">
       </figure>'''
 COHORT_START = f"{str(SETTINGS['cohort_start'])[:10]}T00:00:00+01:00"   # start of day, West Africa Time
 START_TEXT = long_date(SETTINGS['cohort_start'])
+COHORT_BAR = cohort_bar()
 COUNTDOWN = f'''<div class="countdown" data-target="{COHORT_START}">
       <span class="tag">Next cohort starts {START_TEXT}</span>
       <div class="clock" role="timer" aria-label="Time left until the next cohort starts">
@@ -730,6 +754,37 @@ page('gallery.html', 'Gallery', '',
   + '<section class="sheet gal-sheet"><div class="frame">' + GAL_BODY + '</div></section>'
   + nxt('community.html', 'Be in the next one', 'Join the community'))
 
+# ------------------------------------------------------------------ news (added in /admin, content/news/*.json)
+def load_news(folder='content/news'):
+    items = []
+    if os.path.isdir(folder):
+        for name in os.listdir(folder):
+            if not name.endswith('.json'): continue
+            n = json.load(open(os.path.join(folder, name), encoding='utf-8-sig'))
+            if not n.get('title'): continue
+            n['date'] = str(n.get('date') or '2026-11-12')[:10]
+            n['slug'] = name[:-5]
+            items.append(n)
+    items.sort(key=lambda n: (n['date'], n['slug']), reverse=True)
+    return items
+
+NEWS_ITEMS = load_news()
+def news_item(n):
+    import html as h
+    img = f'<img src="{n["image"].lstrip("/")}" alt="" loading="lazy">' if n.get('image') else ''
+    link = ''
+    if n.get('link'):
+        ext = ' target="_blank" rel="noopener"' if n['link'].startswith('http') else ''
+        link = f'<a class="more" href="{h.escape(n["link"])}"{ext}>{h.escape(n.get("link_label") or "Find out more")}</a>'
+    return (f'<article class="news-item" id="{n["slug"]}"><time datetime="{n["date"]}">{long_date(n["date"])}</time>'
+            f'<div class="news-body"><h2>{h.escape(n["title"])}</h2>{img}{mdlite.to_html(n.get("body") or "")}{link}</div></article>')
+
+NEWS_BODY = ''.join(news_item(n) for n in NEWS_ITEMS) or '<p>No updates yet. Check back soon.</p>'
+page('news.html', 'News', '',
+  hero('', '', '', crumb(HOME, (None, 'News')), 'What\'s new at <i>Nocodesquare.</i>', 'Updates from the community: new cohorts, events, launches and milestones.')
+  + '<section class="sheet news-sheet"><div class="frame"><div class="news-list">' + NEWS_BODY + '</div></div></section>'
+  + nxt('@@APPLY@@', 'Want to be part of the next update?', 'Apply to the community'))
+
 TALLY_LOADER = """<script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>"""
 def tally_embed(form_id, title, extra=''):
     return f"""<iframe data-tally-src="https://tally.so/embed/{form_id}?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1{extra}" loading="lazy" width="100%" height="200" frameborder="0" marginheight="0" marginwidth="0" title="{title}"></iframe>
@@ -1052,6 +1107,7 @@ page('instructors.html', 'Meet your instructors', 'cohort.html',
 home = f"""<body data-md="index.md">
 {CUBE}
 {TOOL_SPRITE}
+{COHORT_BAR}
 {header('index.html')}
 <main id="top">
   <section class="hero"><div class="frame">
