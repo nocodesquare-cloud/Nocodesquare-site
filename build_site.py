@@ -104,7 +104,7 @@ def cohort_bar():
 </div>
 <script>(function(){{var b=document.currentScript.previousElementSibling,s=new Date(b.dataset.start),n=new Date(),d=+b.dataset.days;
 var on=b.dataset.always==="true"||(n<s&&n>=new Date(s.getTime()-d*864e5));try{{if(sessionStorage.getItem("ncs-bar-off")===b.dataset.start)on=false}}catch(e){{}}
-if(on)b.hidden=false;b.querySelector(".cohort-x").addEventListener("click",function(){{b.hidden=true;try{{sessionStorage.setItem("ncs-bar-off",b.dataset.start)}}catch(e){{}}}});}})();</script>"""
+var r=document.documentElement,f=function(){{r.style.setProperty("--bar-h",b.hidden?"0px":b.offsetHeight+"px")}};if(on){{b.hidden=false;f();addEventListener("resize",f);addEventListener("load",f)}}b.querySelector(".cohort-x").addEventListener("click",function(){{b.hidden=true;f();try{{sessionStorage.setItem("ncs-bar-off",b.dataset.start)}}catch(e){{}}}});}})();</script>"""
 
 def header(current):
     here = ' aria-current="page"'
