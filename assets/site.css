@@ -824,3 +824,13 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 .gal-box p { display: grid; gap: .15rem; color: #fff; text-align: center; padding-top: .7rem; }
 .gal-box span { color: #C9CBD1; }
 .gal-close { position: absolute; top: -2.6rem; right: 0; width: 2.2rem; height: 2.2rem; border: 0; background: none; color: #fff; font-size: 2rem; line-height: 1; cursor: pointer; }
+
+/* ---------- footer links: all eight groups on one line on wide screens ---------- */
+@media (min-width: 900px) {
+  .sitemap { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: .9rem; }
+  .sitemap b { font-size: .86rem; }
+  .sitemap a { font-size: .8rem; line-height: 1.35; overflow-wrap: anywhere; }
+}
+@media (min-width: 761px) and (max-width: 899px) {
+  .sitemap { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
