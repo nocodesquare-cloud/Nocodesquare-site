@@ -837,15 +837,19 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 }
 
 /* ---------- cohort ticker (top of every page) ---------- */
-.cohort-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 31; background: var(--teal); color: #1E1F26; overflow: hidden; }
+/* Light mode: the logo's dark slate with teal accents. Dark mode: teal (the page itself is slate there). */
+:root { --bar-bg: #393A47; --bar-fg: #FFFFFF; --bar-dot: #5ECDCB; }
+:root[data-theme="dark"] { --bar-bg: #5ECDCB; --bar-fg: #1E1F26; --bar-dot: #1E1F26; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bar-bg: #5ECDCB; --bar-fg: #1E1F26; --bar-dot: #1E1F26; } }
+.cohort-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 31; background: var(--bar-bg); color: var(--bar-fg); overflow: hidden; }
 .cohort-bar[hidden] { display: none; }
 .cohort-bar a { display: block; color: inherit; text-decoration: none; padding-right: 2.6rem; }
 .cohort-run { display: flex; width: max-content; animation: run 40s linear infinite; }
 .cohort-bar a:hover .cohort-run, .cohort-bar a:focus-visible .cohort-run { animation-play-state: paused; }
 .cohort-run > div { display: flex; }
 .cohort-run span { display: inline-flex; align-items: center; gap: 1.4rem; padding: .55rem 0 .55rem 1.4rem; font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
-.cohort-run span::after { content: ""; width: 6px; height: 6px; background: #1E1F26; transform: rotate(45deg); }
-.cohort-x { position: absolute; top: 0; right: 0; bottom: 0; width: 2.6rem; border: 0; background: var(--teal); color: #1E1F26; font-size: 1.3rem; line-height: 1; cursor: pointer; box-shadow: -10px 0 12px var(--teal); }
+.cohort-run span::after { content: ""; width: 6px; height: 6px; background: var(--bar-dot); transform: rotate(45deg); }
+.cohort-x { position: absolute; top: 0; right: 0; bottom: 0; width: 2.6rem; border: 0; background: var(--bar-bg); color: var(--bar-fg); font-size: 1.3rem; line-height: 1; cursor: pointer; box-shadow: -10px 0 12px var(--bar-bg); }
 @media (prefers-reduced-motion: reduce) { .cohort-run { animation: none; } }
 
 /* ---------- news ---------- */
