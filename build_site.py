@@ -573,6 +573,24 @@ MEMBER_STORIES = [{
     'Since then, I have worked with several real estate clients in the US, optimising and automating their systems. I have also just finished university, and I freelance in AI automation today.',
     'If you are unsure about joining, do not think twice after reading this. If you are in the AI automation and no-code world, this is the best community you could be part of.',
   ],
+}, {
+  'slug': 'story-stella-echetama.html',
+  'name': 'Stella Echetama',
+  'first': 'Stella',
+  'headline': 'The people made the difference.',
+  'role': 'Operations and Automation Specialist. Community member since September 2024',
+  'photo': 'img/stella-echetama.jpg',
+  'title': 'From learning alone <i>to automating for a company.</i>',
+  'excerpt': ["I wasn't starting from zero. I was learning Zapier, Make and Airtable, but learning alone only takes you so far.",
+              'Since joining, I have worked as an Automation Specialist for a company, building the Zapier automations that connected their tools.'],
+  'story': [
+    "Before I found Nocodesquare, I wasn't starting from zero. I had taken a few trainings in no-code workflow automation, and I was learning Zapier, Make and Airtable, building and testing my own workflows in Airtable and Make. But I was still figuring out how to get the most out of these tools, and learning alone only takes you so far.",
+    "What I wanted was people: a community who cared about no-code, AI and automation as much as I did. Somewhere I could ask questions, learn from other people's experience and see how these tools are used in real work. In September 2024, I found that in Nocodesquare.",
+    'Since joining, my knowledge has gone much deeper, especially in workflow automation and in database management with Airtable. I have explored what is possible, learnt how different tools work together, and put all of it to use on real projects.',
+    'One milestone stands out. I worked as an Automation Specialist for a company, building the Zapier automations that connected their tools and streamlined how they worked. And I keep learning, because in this space there is always something new to explore.',
+    'Every part of the community has helped me grow, from the discussion spaces and the AI news to the conversations about tools and projects. But what I value most is the people. Members openly share what they know and what they have built. When I am stuck, I can reach out to someone who has already been there, and I have learnt a lot, sometimes from things people mention casually in a conversation.',
+    "If you are unsure about joining, stop thinking about it and just do it. Nocodesquare is full of possibilities, ideas and room to grow, and it has grown beyond conversations too: there are now cohorts where you can learn workflow automation and AI hands-on. It is a decision you won't regret.",
+  ],
 }]
 def story_card(m):
     quote = ''.join(f'<p>{x}</p>' for x in m['excerpt'])
