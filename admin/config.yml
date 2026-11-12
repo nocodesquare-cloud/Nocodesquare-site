@@ -78,6 +78,37 @@ collections:
           - { label: Link, name: url, widget: string, pattern: ['^https?://', 'Must start with http:// or https://'] }
       - { label: Order, name: order, widget: hidden, default: 0 }
 
+  - name: gallery
+    label: Gallery
+    label_singular: Photo
+    description: Photos on the Gallery page (nocodesquare.com/gallery). Newest dates show first, grouped by year.
+    folder: content/gallery
+    create: true
+    delete: true
+    extension: json
+    format: json
+    identifier_field: caption
+    slug: '{{year}}-{{month}}-{{day}}-{{slug}}'
+    media_folder: /img/gallery
+    public_folder: img/gallery
+    summary: '{{caption}}  ·  {{date}}'
+    sortable_fields: ['date', 'caption']
+    preview_path: gallery.html
+    editor: { preview: false }
+    fields:
+      - { label: Photo, name: photo, widget: image, hint: 'Phone photos are fine. The site makes a lighter copy for visitors automatically.' }
+      - { label: Caption, name: caption, widget: string, hint: 'What is happening, in a short line. Example: First Lagos meetup, everyone after the demos.' }
+      - label: When it was taken
+        name: date
+        widget: datetime
+        required: false
+        format: 'YYYY-MM-DD'
+        date_format: 'D MMMM YYYY'
+        time_format: false
+        picker_utc: true
+        hint: 'Optional. Any day in the right month is fine; the page shows the month and year.'
+      - { label: Place, name: place, widget: string, required: false, hint: 'Optional. Example: Lagos, or Online.' }
+
   - name: settings
     label: Site settings
     description: Details used across the whole site.

@@ -128,6 +128,7 @@ FOOTER = '''<footer>
     <div><b><a href="community.html">Community</a></b><a href="community.html#inside">What happens inside</a><a href="community.html#sessions">Sessions</a><a href="inside-the-build.html">Inside the Build</a><a href="freelance-corner.html">Freelance Corner</a><a href="show-and-tell.html">Show and Tell</a><a href="community.html#start">How to apply</a></div>
     <div><b><a href="cohort.html">Academy</a></b><a href="cohort.html">Cohort</a><a href="cohort-curriculum.html">Curriculum</a><a href="cohort.html#questions">Questions</a><a href="instructors.html">Meet your instructors</a><a href="academy-testimonials.html">Testimonials</a><a href="apply-cohort.html">Apply to the cohort</a></div>
     <div><b><a href="events.html">Events</a></b><a href="events.html">Coming soon</a></div>
+    <div><b><a href="gallery.html">Gallery</a></b><a href="gallery.html">Moments we keep</a></div>
     <div><b><a href="blog.html">Blog</a></b><a href="blog.html">All articles</a>@@FOOT_POSTS@@</div>
     <div><b><a href="merch.html">Merch</a></b><a href="merch.html">Shop</a><a href="cart.html">Your cart</a></div>
     <div><b><a href="@@APPLY@@">Apply</a></b><a href="join.html">Every way in</a><a href="@@YT@@"@@YTA@@>YouTube</a></div>
@@ -662,6 +663,72 @@ for m in MEMBER_STORIES:
 page('events.html', 'Events', 'events.html',
   hero('crowd', 'copper', 'copper', crumb(HOME, (None, 'Events')), 'Events <i>coming soon.</i>', 'We\'re working on our events. Community members will be the first to hear when they\'re announced.', '<a class="slab" href="@@APPLY@@">Apply to the community</a>')
   + nxt('community.html', 'In the meantime', 'The community'))
+
+# ------------------------------------------------------------------ gallery (photos added in /admin, content/gallery/*.json)
+import html as _html
+def load_gallery(folder='content/gallery'):
+    items = []
+    if os.path.isdir(folder):
+        for name in os.listdir(folder):
+            if not name.endswith('.json'): continue
+            g = json.load(open(os.path.join(folder, name), encoding='utf-8-sig'))
+            if g.get('photo'):
+                g['photo'] = g['photo'].lstrip('/')
+                g['date'] = str(g.get('date') or '')[:10]
+                items.append(g)
+    items.sort(key=lambda g: g['date'], reverse=True)
+    return items
+
+def shrink(rel, longest=1800):
+    # Phone photos can be 5MB+. Serve a lighter copy; the original stays in the repo.
+    try:
+        from PIL import Image, ImageOps
+    except ImportError:
+        return
+    p = os.path.join(OUT, rel)
+    if not os.path.isfile(p): return
+    try:
+        im = Image.open(p)
+        if max(im.size) <= longest and os.path.getsize(p) < 600_000: return
+        im = ImageOps.exif_transpose(im)
+        im.thumbnail((longest, longest))
+        if p.lower().endswith(('.jpg', '.jpeg')):
+            im.convert('RGB').save(p, quality=84, optimize=True, progressive=True)
+        else:
+            im.save(p, optimize=True)
+    except Exception as e:
+        print('could not resize', rel, e)
+
+GALLERY_ITEMS = load_gallery()
+def gal_item(g):
+    cap = _html.escape(g.get('caption') or '')
+    when = ''
+    if g['date']:
+        d = date.fromisoformat(g['date'])
+        when = f'{d:%B} {d.year}'
+    meta = ' · '.join(x for x in [when, _html.escape(g.get('place') or '')] if x)
+    meta_html = f'<span>{meta}</span>' if meta else ''
+    return (f'<figure class="gal-item"><button type="button" class="gal-open" data-cap="{cap}" data-meta="{meta}" aria-label="Enlarge photo: {cap}">'
+            f'<img src="{g["photo"]}" alt="{cap}" loading="lazy"></button>'
+            f'<figcaption><b>{cap}</b>{meta_html}</figcaption></figure>')
+
+if GALLERY_ITEMS:
+    for g in GALLERY_ITEMS: shrink(g['photo'])
+    groups = {}
+    for g in GALLERY_ITEMS:
+        groups.setdefault(g['date'][:4] or 'More moments', []).append(g)
+    GAL_BODY = ''.join(f'<h2 class="big gal-year">{y}</h2><div class="photo-wall">' + ''.join(gal_item(g) for g in gs) + '</div>' for y, gs in groups.items())
+    GAL_BODY += '''<dialog class="gal-box" aria-label="Photo"><button type="button" class="gal-close" aria-label="Close">×</button><img alt=""><p><b></b><span></span></p></dialog>
+<script>(function(){var box=document.querySelector('.gal-box');if(!box)return;var im=box.querySelector('img'),b=box.querySelector('b'),s=box.querySelector('span');
+document.querySelectorAll('.gal-open').forEach(function(btn){btn.addEventListener('click',function(){im.src=btn.querySelector('img').src;im.alt=btn.dataset.cap;b.textContent=btn.dataset.cap;s.textContent=btn.dataset.meta;box.showModal();});});
+box.querySelector('.gal-close').addEventListener('click',function(){box.close();});box.addEventListener('click',function(e){if(e.target===box)box.close();});})();</script>'''
+else:
+    GAL_BODY = '<div class="gal-empty"><p class="tag">First photos on the way</p><p>We\'re gathering photos from our classes, cohorts and meetups. Check back soon.</p></div>'
+
+page('gallery.html', 'Gallery', '',
+  hero('', '', '', crumb(HOME, (None, 'Gallery')), 'Moments <i>we keep.</i>', 'Photos from the Nocodesquare community: classes, cohorts, meetups and the people who make it.')
+  + '<section class="sheet gal-sheet"><div class="frame">' + GAL_BODY + '</div></section>'
+  + nxt('community.html', 'Be in the next one', 'Join the community'))
 
 TALLY_LOADER = """<script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>"""
 def tally_embed(form_id, title, extra=''):

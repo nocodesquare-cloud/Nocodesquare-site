@@ -805,3 +805,22 @@ footer:has(.ncs-mark) { padding-bottom: 0; }
 
 /* Blog cover image set in the admin */
 .post-cover { display: block; width: 100%; height: auto; max-height: 460px; object-fit: cover; margin: 0 0 1.6rem; border: 1.5px solid var(--line); }
+
+/* ---------- gallery ---------- */
+.gal-sheet .frame { display: block; }
+.gal-year { margin: 2rem 0 1rem; }
+.gal-year:first-child { margin-top: 0; }
+.photo-wall { columns: 3 260px; column-gap: 1.1rem; }
+.gal-item { break-inside: avoid; margin: 0 0 1.4rem; }
+.gal-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
+.gal-open img { display: block; width: 100%; height: auto; transition: opacity .2s; }
+.gal-open:hover img, .gal-open:focus-visible img { opacity: .88; }
+.gal-item figcaption { display: grid; gap: .1rem; padding-top: .55rem; font-size: .92rem; line-height: 1.35; }
+.gal-item figcaption span, .gal-box span { color: var(--muted); font-size: .84rem; }
+.gal-empty { padding: 1rem 0 2rem; max-width: 34rem; }
+.gal-box { padding: 0; border: 0; background: transparent; max-width: min(94vw, 1200px); max-height: 94vh; overflow: visible; }
+.gal-box::backdrop { background: rgba(14, 15, 19, .9); }
+.gal-box img { display: block; max-width: 100%; max-height: 82vh; margin: 0 auto; }
+.gal-box p { display: grid; gap: .15rem; color: #fff; text-align: center; padding-top: .7rem; }
+.gal-box span { color: #C9CBD1; }
+.gal-close { position: absolute; top: -2.6rem; right: 0; width: 2.2rem; height: 2.2rem; border: 0; background: none; color: #fff; font-size: 2rem; line-height: 1; cursor: pointer; }
