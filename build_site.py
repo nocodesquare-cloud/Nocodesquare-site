@@ -415,6 +415,7 @@ page('community.html', 'Community', 'community.html',
 
 # Add a video here and it appears on the Show and Tell page: (YouTube id, title, description, length)
 SHOW_VIDEOS = [
+  ('PEBz3KNVQY4', 'Building a chatbot', 'Nelly Mbula builds a responsive, AI-powered chatbot from an empty folder, using VS Code and the terminal.', '1:08:25'),
   ('h0ZOh1nWvbU', 'Building upKit', 'An AI-powered system for highly tailored proposals.', '1:35:57'),
 ]
 def video_card(v):
