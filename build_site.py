@@ -618,6 +618,24 @@ MEMBER_STORIES = [{
     'Every part of the community has helped me grow, from the discussion spaces and the AI news to the conversations about tools and projects. But what I value most is the people. Members openly share what they know and what they have built. When I am stuck, I can reach out to someone who has already been there, and I have learnt a lot, sometimes from things people mention casually in a conversation.',
     "If you are unsure about joining, stop thinking about it and just do it. Nocodesquare is full of possibilities, ideas and room to grow, and it has grown beyond conversations too: there are now cohorts where you can learn workflow automation and AI hands-on. It is a decision you won't regret.",
   ],
+}, {
+  'slug': 'story-nelly-mbula.html',
+  'name': 'Nelly Mbula',
+  'first': 'Nelly',
+  'headline': 'From broad tech to a clear path.',
+  'role': 'Medical practitioner and WhatsApp chatbot builder. Community member since June 2024',
+  'photo': 'img/nelly-mbula.jpg',
+  'title': 'A medic who builds <i>WhatsApp chatbots.</i>',
+  'excerpt': ['When I joined, my goal was simple: learn how to get API keys, find my way around documentation and get better at AI automation.',
+              'Since then, I have built a WhatsApp AI chatbot that talks with clients, manages appointments and collects leads.'],
+  'story': [
+    'I am a medical practitioner. Before I found Nocodesquare, I had taken classes on virtual assistance and AI essentials, and I was slowly getting to know more about tech.',
+    'When I joined the community in June 2024, my goal was simple: learn how to get API keys, find my way around documentation and get better at AI automation.',
+    'Since then, I have built a WhatsApp AI chatbot with Make.com and Zapier, and a Telegram chatbot with n8n. They hold conversations with clients on WhatsApp, manage appointments (booking, cancelling and rescheduling) and collect leads along the way.',
+    'AYB has been the kind of leader who pushes you. He took me from not knowing what to do to finding a path of my own. I went from being interested in tech in general to knowing exactly what I want to be: a WhatsApp chatbot engineer.',
+    'Sekinat helped me understand APIs, taking the time to set up meetings and walk me through them. I owe a big thank you to AYB, Sekinat and the whole NCS community for their support. Watching other members win and show their work made me work hard to show my own, and I have since <a href="show-and-tell.html">presented my chatbot build at Show and Tell</a>.',
+    "If you are unsure about joining, know this: once you are in, if you are not building, you are not really part of the community. Welcome to NCS, where every member is building and nobody lets up.",
+  ],
 }]
 def story_card(m):
     quote = ''.join(f'<p>{x}</p>' for x in m['excerpt'])
