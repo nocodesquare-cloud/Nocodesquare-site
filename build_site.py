@@ -1292,6 +1292,45 @@ open(f'{OUT}/index.html', 'w', encoding='utf-8').write(
     + '<link rel="alternate" type="text/markdown" href="index.md" title="Agent-readable version">\n'
     + FONTS + '\n' + home.replace('@@APPLY@@', APPLY_LINK).replace('@@MD@@', 'index.md') + '<script src="site.js"></script>\n')
 
+
+# ------------------------------------------------------------------ SEO: page descriptions, canonical links, sitemap, robots.txt
+import html as _h
+SITE = 'https://nocodesquare.com'
+HOME_DESC = "Nocodesquare is Africa's community and academy for no-code, AI and automation builders. Learn the tools, build real systems and grow with builders across Africa."
+def _clean_url(name):
+    return SITE + '/' if name == 'index.html' else SITE + '/' + name[:-5]
+def _describe(doc):
+    m = re.search(r'class="story-body"><p>(.*?)</p>', doc, re.S) or re.search(r'class="pagehero".*?<p>(.*?)</p>', doc, re.S)
+    if not m: return HOME_DESC
+    t = _h.unescape(re.sub(r'<[^>]+>', '', m.group(1)))
+    t = re.sub(r'\s+', ' ', t).strip()
+    if len(t) > 158: t = t[:155].rsplit(' ', 1)[0] + '...'
+    return t or HOME_DESC
+PAGES = sorted(f for f in os.listdir(OUT) if f.endswith('.html'))
+for name in PAGES:
+    path = os.path.join(OUT, name)
+    doc = open(path, encoding='utf-8').read()
+    if 'name="description"' in doc: continue
+    title = re.search(r'<title>(.*?)</title>', doc, re.S).group(1)
+    desc = HOME_DESC if name == 'index.html' else _describe(doc)
+    url = _clean_url(name)
+    e = lambda x: _h.escape(x, quote=True)
+    tags = (f'\n<meta name="description" content="{e(desc)}">\n<link rel="canonical" href="{url}">'
+            f'\n<meta property="og:type" content="website">\n<meta property="og:site_name" content="Nocodesquare">'
+            f'\n<meta property="og:title" content="{e(_h.unescape(title))}">\n<meta property="og:description" content="{e(desc)}">\n<meta property="og:url" content="{url}">'
+            f'\n<meta name="twitter:card" content="summary">')
+    doc = doc.replace('</title>', '</title>' + tags, 1)
+    open(path, 'w', encoding='utf-8').write(doc)
+
+with open(os.path.join(OUT, 'sitemap.xml'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
+    for name in PAGES:
+        if name in ('cart.html',): continue
+        f.write(f'  <url><loc>{_clean_url(name)}</loc><lastmod>{date.today().isoformat()}</lastmod></url>\n')
+    f.write('</urlset>\n')
+with open(os.path.join(OUT, 'robots.txt'), 'w', encoding='utf-8', newline='\n') as f:
+    f.write(f'User-agent: *\nAllow: /\nDisallow: /admin/\n\nSitemap: {SITE}/sitemap.xml\n')
+
 print(sorted(f for f in os.listdir(OUT) if f.endswith('.html')))
 
 # Agent mode: a Markdown copy of every page, plus llms.txt and llms-full.txt for AI agents
