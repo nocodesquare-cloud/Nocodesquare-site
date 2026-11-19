@@ -636,6 +636,25 @@ MEMBER_STORIES = [{
     'Sekinat helped me understand APIs, taking the time to set up meetings and walk me through them. I owe a big thank you to AYB, Sekinat and the whole NCS community for their support. Watching other members win and show their work made me work hard to show my own, and I have since <a href="show-and-tell.html">presented my chatbot build at Show and Tell</a>.',
     "If you are unsure about joining, know this: once you are in, if you are not building, you are not really part of the community. Welcome to NCS, where every member is building and nobody lets up.",
   ],
+}, {
+  'slug': 'story-joyce-wanjiku-kamau.html',
+  'name': 'Joyce Wanjiku Kamau',
+  'first': 'Joyce',
+  'headline': 'Held to my word, and better for it.',
+  'role': 'Administrative and Operations Support Professional and Virtual Assistant. Community member since June 2026',
+  'photo': 'img/joyce-wanjiku-kamau.jpg',
+  'title': 'From completing tasks <i>to building systems.</i>',
+  'excerpt': ["I knew AI and automation could make work easier. I just didn't know how to use them to build anything practical.",
+              'Since joining, I have built a CRM for agencies on Monday.com, connected with Make, that tracks leads, follow-ups and which leads turn into business.'],
+  'story': [
+    'Before Nocodesquare, I was building my career in administrative support, finance and virtual assistance. I coordinated tasks, handled administrative operations and kept day-to-day business running.',
+    "I was curious about AI and automation, but my knowledge was basic. I knew these tools could make work easier; I just didn't know how to use them to build practical solutions. I wanted to move beyond completing tasks and start creating better systems.",
+    'That is why I joined in June 2026. I wanted practical skills I could use in real work, a stronger offer as a virtual assistant, and a path towards more strategic operations and automation roles.',
+    "The thing I am proudest of is a CRM I built on Monday.com, connected with Make. It is designed for agencies: it tracks their leads, manages follow-ups and shows which leads are actually turning into business, so potential clients don't slip through the cracks. Before Nocodesquare, I didn't think I could build something like that on my own. The biggest win isn't the CRM itself. It's knowing I can take an idea, explore the tools and build something that solves a real business problem.",
+    "AYB has had a real impact on my journey. He is strict, he is consistent and he follows up. He holds you to what you said you would do, and that makes you want to prove you are serious and can deliver. Honestly, you really don't want to mess up with him! But that accountability pushed me to take myself and my goals more seriously.",
+    "I also love the weekend <a href=\"show-and-tell.html\">Show and Tell</a> sessions. Having a place to show what you have been working on creates healthy pressure: you don't want to keep showing up with nothing to share, so you keep learning, building and making progress.",
+    "If you are curious about technology but don't know where to start, give it a try. You don't need a technical background, just curiosity, a willingness to learn and the patience to experiment. And don't just learn about the tools: find real problems you can solve with them. The more hands-on projects and real-world exercises, the better, because that is where learning turns into real skill.",
+  ],
 }]
 def story_card(m):
     quote = ''.join(f'<p>{x}</p>' for x in m['excerpt'])
